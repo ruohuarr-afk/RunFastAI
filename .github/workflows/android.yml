@@ -4,13 +4,12 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - "*.zip"
       - ".github/workflows/android.yml"
+      - "*.zip"
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,15 +20,10 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Find and extract source
+      - name: Extract source
         run: |
-          ZIP_FILE=$(find . -maxdepth 1 -name "*.zip" | head -n 1)
-          if [ -z "$ZIP_FILE" ]; then
-            echo "No source ZIP found"
-            exit 1
-          fi
           mkdir source
-          unzip -q "$ZIP_FILE" -d source
+          unzip -q "$(find . -maxdepth 1 -name '*.zip' | head -n 1)" -d source
           PROJECT_DIR=$(dirname "$(find source -name settings.gradle.kts | head -n 1)")
           echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
 
@@ -39,10 +33,11 @@ jobs:
           gradle-version: "8.9"
 
       - name: Build APK
-        run: gradle -p "$PROJECT_DIR" --no-daemon assembleDebug
+        run: gradle -p "$PROJECT_DIR" assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: RunFastAI-APK
-          path: source/**/app/build/outputs/apk/debug/*.apk
+          path: "**/app/build/outputs/apk/debug/*.apk"
+          if-no-files-found: error
