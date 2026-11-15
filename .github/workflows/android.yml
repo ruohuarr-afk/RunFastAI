@@ -10,6 +10,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,6 +27,26 @@ jobs:
           unzip -q "$(find . -maxdepth 1 -name '*.zip' | head -n 1)" -d source
           PROJECT_DIR=$(dirname "$(find source -name settings.gradle.kts | head -n 1)")
           echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
+
+      - name: Fix JVM target
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = next(Path("source").rglob("app/build.gradle.kts"))
+          s = p.read_text()
+          marker = "    buildFeatures { viewBinding = true }\n"
+          addition = """    compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+              kotlinOptions {
+                  jvmTarget = "17"
+              }
+          """
+          if "sourceCompatibility = JavaVersion.VERSION_17" not in s:
+              s = s.replace(marker, marker + addition)
+          p.write_text(s)
+          PY
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
