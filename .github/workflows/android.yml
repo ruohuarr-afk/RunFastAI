@@ -24,7 +24,7 @@ jobs:
       - name: Extract source
         run: |
           mkdir source
-          unzip -q "$(find . -maxdepth 1 -name '*.zip' | head -n 1)" -d source
+          unzip -q "RunFastAI_v0.3_手牌区域稳定识别源码.zip" -d source
           PROJECT_DIR=$(dirname "$(find source -name settings.gradle.kts | head -n 1)")
           echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
 
