@@ -24,7 +24,7 @@ jobs:
       - name: Extract source
         run: |
           mkdir source
-          unzip -q "RunFastAI_v0.6_双玩法_悬浮圆点源码.zip" -d source
+          unzip -q "RunFastAI_v0.7_屏幕采集与极简悬浮窗源码.zip" -d source
           PROJECT_DIR=$(dirname "$(find source -name settings.gradle.kts | head -n 1)")
           echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
 
