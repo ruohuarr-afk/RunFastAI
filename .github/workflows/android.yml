@@ -25,8 +25,10 @@ jobs:
         run: |
           mkdir source
           unzip -q "RunFastAI_v1.5_屏幕采集与方向适配源码.zip" -d source
-          PROJECT_DIR=$(dirname "$(find source -path '*v1.5*' -name settings.gradle.kts | head -n 1)")
-          echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
+          SETTINGS_FILE=$(find source -name settings.gradle.kts | grep 'v1.5' | head -n 1)
+test -n "$SETTINGS_FILE" || { echo "ERROR: 找不到 v1.5 的 settings.gradle.kts"; find source -name settings.gradle.kts; exit 1; }
+PROJECT_DIR=$(dirname "$SETTINGS_FILE")
+echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
 
       - name: Fix JVM target
         run: |
