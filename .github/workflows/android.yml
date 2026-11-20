@@ -1,66 +1,52 @@
-name: Build Android APK
+name: RunFastAI v1.4 Android Build
 
 on:
   workflow_dispatch:
   push:
     paths:
       - ".github/workflows/android.yml"
-      - "*.zip"
+      - "RunFastAI_v1.4_稳定性与全屏采集源码.zip"
+
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Setup JDK
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
-      - name: Extract source
+      - name: Extract v1.4 source
         run: |
           mkdir source
-          unzip -q "RunFastAI_v1.5_屏幕采集与方向适配源码.zip" -d source
-          SETTINGS_FILE=$(find source -name settings.gradle.kts | grep 'v1.5' | head -n 1)
-test -n "$SETTINGS_FILE" || { echo "ERROR: 找不到 v1.5 的 settings.gradle.kts"; find source -name settings.gradle.kts; exit 1; }
-PROJECT_DIR=$(dirname "$SETTINGS_FILE")
-echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
+          unzip -q "RunFastAI_v1.4_稳定性与全屏采集源码.zip" -d source
+          SETTINGS_FILE=$(find source -name settings.gradle.kts | head -n 1)
+          if [ -z "$SETTINGS_FILE" ]; then
+            echo "找不到 settings.gradle.kts"
+            exit 1
+          fi
+          PROJECT_DIR=$(dirname "$SETTINGS_FILE")
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
 
-      - name: Fix JVM target
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p = next(Path("source").rglob("app/build.gradle.kts"))
-          s = p.read_text()
-          marker = "    buildFeatures { viewBinding = true }\n"
-          addition = """    compileOptions {
-                  sourceCompatibility = JavaVersion.VERSION_17
-                  targetCompatibility = JavaVersion.VERSION_17
-              }
-              kotlinOptions {
-                  jvmTarget = "17"
-              }
-          """
-          if "sourceCompatibility = JavaVersion.VERSION_17" not in s:
-              s = s.replace(marker, marker + addition)
-          p.write_text(s)
-          PY
-
-      - name: Setup Gradle
+      - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
 
       - name: Build APK
-        run: gradle -p "$PROJECT_DIR" assembleDebug
+        run: gradle --no-daemon -p "$PROJECT_DIR" assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: RunFastAI-APK
-          path: "**/app/build/outputs/apk/debug/*.apk"
+          name: RunFastAI-v1.4-debug-apk
+          path: source/**/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
